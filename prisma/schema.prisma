@@ -1,0 +1,138 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  fullName  String
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenantId  Int?
+  tenant    Tenant?  @relation(fields: [tenantId], references: [id])
+}
+
+model Tenant {
+  id         Int        @id @default(autoincrement())
+  name       String
+  properties Property[]
+  users      User[]
+}
+
+model Property {
+  id         Int        @id @default(autoincrement())
+  name       String
+  tenantId   Int
+  tenant     Tenant     @relation(fields: [tenantId], references: [id])
+  roomTypes  RoomType[]
+  rooms      Room[]
+  ratePlans  RatePlan[]
+}
+
+model Guest {
+  id        Int      @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  reservations Reservation[]
+}
+
+model RoomType {
+  id         Int        @id @default(autoincrement())
+  tenantId   Int
+  propertyId Int
+  code       String
+  name       String
+  basePrice  Float    
+  property   Property   @relation(fields: [propertyId], references: [id])
+  rooms      Room[]
+}
+
+model Room {
+  id         Int        @id @default(autoincrement())
+  tenantId   Int
+  propertyId Int
+  roomTypeId Int
+  roomNo     String
+  status     String     @default("available")
+  property   Property   @relation(fields: [propertyId], references: [id])
+  roomType   RoomType   @relation(fields: [roomTypeId], references: [id])
+  stays  Stay[]
+}
+
+model RatePlan {
+  id         Int        @id @default(autoincrement())
+  tenantId   Int
+  propertyId Int
+  code       String
+  name       String
+  property   Property   @relation(fields: [propertyId], references: [id])
+  stays  Stay[]
+}
+
+model Reservation {
+  id            Int       @id @default(autoincrement())
+  tenantId      Int
+  propertyId    Int
+  guestId       Int
+  status        String     @default("booked")
+  totalAmount   Float 
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  guest         Guest      @relation(fields: [guestId], references: [id])
+  stays         Stay[]
+}
+
+model Stay {
+  id            Int       @id @default(autoincrement())
+  reservationId Int
+  roomId        Int
+  checkInDate   DateTime  
+  checkOutDate  DateTime  
+  ratePlanId    Int?
+  pricePerNight Float 
+
+  reservation   Reservation @relation(fields: [reservationId], references: [id])
+  room          Room        @relation(fields: [roomId], references: [id])
+  ratePlan      RatePlan?   @relation(fields: [ratePlanId], references: [id])
+}
+
+model HousekeepingDaily {
+  id         Int       @id @default(autoincrement())
+  tenantId   Int
+  propertyId Int
+  roomId     Int
+  date       DateTime  
+  hkStatus   String    // clean|dirty|inspected
+  roomStatus String    @default("available")
+  createdAt  DateTime  @default(now())
+
+  @@unique([tenantId, propertyId, roomId, date], name: "hk_unique_per_day")
+}
+
+model InventoryDaily {
+  id           Int       @id @default(autoincrement())
+  tenantId     Int
+  propertyId   Int
+  roomTypeId   Int
+  ratePlanId   Int
+  date         DateTime  
+  price        Float  
+  allotment    Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([tenantId, propertyId, roomTypeId, ratePlanId, date], name: "inventory_unique_per_day")
+  @@index([propertyId, date], name: "inventory_property_date_idx")
+}
