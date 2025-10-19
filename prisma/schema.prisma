@@ -8,11 +8,20 @@ datasource db {
   url      = "file:./dev.db"
 }
 
+enum Role { 
+    ADMIN 
+    MANAGER 
+    STAFF 
+    HOUSEKEEPING 
+    VIEWER 
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   email     String   @unique
   fullName  String
   password  String
+  role Role @default(VIEWER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   tenantId  Int?

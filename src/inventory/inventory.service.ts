@@ -121,10 +121,17 @@ export class InventoryService {
           roomTypeId: i.room_type_id,
           ratePlanId: i.rate_plan_id,
           date,
-          price: i.price ?? null,
+          price: i.price ?? 0,
           allotment: i.allotment ?? null,
         },
         update: {
+          // tenantId: data.tenant_id ?? 1
+          // price: i.price ?? 0,
+          // date: i.date,
+          // propertyId: i.property_id,
+          // ratePlanId: i.rate_plan_id,
+          // roomTypeId: i.room_type_id,
+          // allotment: i.allotment ?? null
           ...(i.price !== undefined ? { price: i.price } : {}),
           ...(i.allotment !== undefined ? { allotment: i.allotment } : {}),
         },
